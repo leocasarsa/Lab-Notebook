@@ -274,6 +274,7 @@ class ConstrainedNIGNormalMetamodel(MyMetamodel):
         return dict(loc=new_m, V=new_V, shape=new_shape, scale=new_scale)
 
 
+'''
 #Test basic functionalities
 
 # from ConstrainedNIGNormalMetamodel import *
@@ -290,3 +291,4 @@ test.infer()
 print(test.data)
 
 print(test.estimate(1,2))
+'''

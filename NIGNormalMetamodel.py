@@ -236,7 +236,7 @@ class NIGNormalMetamodel(MyMetamodel):
 
 
 #Test basic functionalities
-
+'''
 from NIGNormalMetamodel import *
 
 X = np.tile(9., [10,5])
@@ -251,4 +251,4 @@ test.infer()
 print(test.data)
 
 print(test.estimate(1,2))
-
+'''

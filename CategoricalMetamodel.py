@@ -12,7 +12,7 @@ def counts_to_data(counts):
     """
     Converts a vector of counts to data.
     """
-    assert type(counts) is list or type(counts) is numpy.ndarray
+    assert type(counts) is list or type(counts) is np.ndarray
     K = len(counts)
     N = int(sum(counts))
     X = []
@@ -26,8 +26,8 @@ def counts_to_data(counts):
 
     assert len(X) == N
 
-    random.shuffle(X)
-    X = numpy.array(X, dtype=float)
+    np.random.shuffle(X)
+    X = np.array(X, dtype=float)
 
     return X
 
@@ -35,12 +35,13 @@ def data_to_counts(array, K):
     """
     Converts a data numpy array with integers from 1 to K to counts.
     """
-    assert type(array) is numpy.ndarray and type(K) is int
+    assert type(array) is np.ndarray and type(K) is int
     counts = np.zeros(K)
     noRows = len(array)
     for i in np.arange(noRows):
-        value = array[i]
-        counts[value] =+1
+        if not np.isnan(array[i]):
+            value = array[i]
+            counts[value] =+1
 
     return counts
 
@@ -71,7 +72,7 @@ def check_hypers(hypers, noCols):
             confirm_check = False
 
         if type(value) is not float \
-        and type(value) is not numpy.float64:
+        and type(value) is not np.float64:
             print("TypeWarning: %s should be float" % key)
             confirm_check = False
 
@@ -109,13 +110,13 @@ def check_single_column(colno):
     '''Check if colno is one integer.'''
     print('Single Column check was not implemented yet')
 
-class DirichletMetamodel(MyMetamodel):
-    """Constrained Normal-Inverse-Gamma-Normal metamodel for MyMetamodel.
+class CategoricalMetamodel(MyMetamodel):
+    """Dirichlet-Categorical metamodel for MyMetamodel.
 
-    The metamodel is named ``constrained_nig_normal``.
+    The metamodel is named ``dirichlet_categorical``.
     
     Class Methods:
-        __init__(self,data,typespec)
+        def __init__(self,data,typespec,hypers=[]): 
         name(self)
         infer(self, threshold, numsamples=None)
         predict(self, colno, threshold, numsamples=None)
@@ -129,7 +130,7 @@ class DirichletMetamodel(MyMetamodel):
     """
 
     def __init__(self,data,typespec,hypers=[]): 
-        super(ConstrainedNIGNormalMetamodel, self).__init__(data,typespec)
+        super(CategoricalMetamodel, self).__init__(data,typespec)
 
         noCols = self.data.shape[1]
         if check_hypers(hypers, noCols):
@@ -145,7 +146,7 @@ class DirichletMetamodel(MyMetamodel):
         K = [7 for _ in np.arange(noCols)]
         return dict(dirichlet_alpha=alpha, K=K)
         
-    def name(self): return 'constrained_nig_normal'
+    def name(self): return 'dirichlet_categorical'
   
     def infer(self, threshold=0, numsamples=None):
         """Predict a value for each missing value in self.data."""
@@ -166,8 +167,9 @@ class DirichletMetamodel(MyMetamodel):
         # What is confidence exactly?
         check_single_column(colno)
 
-        value = max(self.get_predictive_params()['weights'][colno])
-        confidence = 1 #closed-form posterior
+        weights = self.get_predictive_params()['weights'][colno]
+        value = np.array(weights).argmax()
+        confidence = np.array(weights).max()
         return value, confidence      
         
     def simulate(self, colnos, constraints=[], numpredictions=1):
@@ -187,7 +189,7 @@ class DirichletMetamodel(MyMetamodel):
         for icol in colnos:
             # multinomial draw
             counts = np.array(np.random.multinomial(numpredictions, weights[icol]), dtype=int)
-            simulation = np.append(counts_to_data(counts))
+            simulation = np.append(simulation,counts_to_data(counts))
 
         return colnos, simulation
     
@@ -249,27 +251,30 @@ class DirichletMetamodel(MyMetamodel):
         noRows = np.sum(~np.isnan(self.data),axis=0)
         noCols = self.data.shape[1]
         for colno in np.arange(noCols):
-            counts = data_to_counts(self.data[colno])
+            counts = data_to_counts(self.data[colno], K[colno])
             new_alphas.append(alphas[colno] + counts)
 
-        return dict(dirichlet_alpha=new_alpha, K=K)
+        return dict(dirichlet_alpha=new_alphas, K=K)
 
 
 '''
 #Test basic functionalities
 
-# from ConstrainedNIGNormalMetamodel import *
 
-X = np.tile(9., [10,5])
-for [i,j] in [[0,0],[0,2],[1,3],[3,4],[4,4],[5,1]]:
+from CategoricalMetamodel import *
+
+X = np.tile(1., [100,1])
+for [i,j] in [[0,0],[23,0],[44,0]]:
     X[i][j] = float('nan')
 
-test = ConstrainedNIGNormalMetamodel(X,'standard', bounds=[0,8])
+test = CategoricalMetamodel(X,'standard')
 
-print(test.simulate([1,2,3],numpredictions=100))
+print(X)
+
+print(test.simulate([0],numpredictions=100))
 
 test.infer()
-print(test.data)
 
+print(test.data)
 print(test.estimate(1,2))
 '''
