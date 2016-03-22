@@ -1,0 +1,7 @@
+{
+  "test_gaussian_chain.py::TestTrainGpmccBasic::test_data": true, 
+  "test_gaussian_chain.py::TestTrainGpmccBasic::test_engine": true, 
+  "test_gaussian_chain.py::TestTrainGpmccBasic::test_time": true, 
+  "test_gaussian_chain.py::TestTrainGpmccEnough::test_data": true, 
+  "test_gaussian_chain.py::TestTrainGpmccEnough::test_engine": true
+}
